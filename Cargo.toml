@@ -1,0 +1,20 @@
+[package]
+name = "invariant-ledger"
+version = "0.1.0"
+edition = "2021"
+description = "Every Joule accounted for. Per query, per container, per second."
+license = "Apache-2.0"
+
+[[bin]]
+name = "invariant-ledger"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+prometheus = "0.13"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+log = "0.4"
+env_logger = "0.11"
+libc = "0.2"
