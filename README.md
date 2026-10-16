@@ -1,6 +1,6 @@
 # invariant-ledger
 
-**Every Joule accounted for. Per query, per container, per second.**
+**Know exactly how many Joules every AI query and containerized workload costs — zero specialized hardware required.**
 
 A lightweight daemon that maps hardware telemetry (Intel RAPL, AMD GPU, NVIDIA) to a closed-loop M_0 energy ledger, attributing real-time Joules to cgroups and containers.
 

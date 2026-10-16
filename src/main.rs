@@ -62,13 +62,20 @@ async fn main() -> Result<()> {
         metrics.joules_total.inc_by(total_j);
 
         // Attribute to cgroups
-        if let Ok(curr_stats) = attribution::read_cgroup_stats() {
-            let attributed = attribution::attribute_joules(total_j, &prev_stats, &curr_stats);
-            for (cg, j) in &attributed {
-                ledger.charge_out(*j, cg);
-                metrics.joules_by_cgroup.with_label_values(&[cg]).inc_by(*j);
+        match attribution::read_cgroup_stats() {
+            Ok(curr_stats) => {
+                let attributed = attribution::attribute_joules(total_j, &prev_stats, &curr_stats);
+                for (cg, j) in &attributed {
+                    ledger.charge_out(*j, cg);
+                    metrics.joules_by_cgroup.with_label_values(&[cg]).inc_by(*j);
+                }
+                prev_stats = curr_stats;
             }
-            prev_stats = curr_stats;
+            Err(e) => {
+                warn!("cgroup read failed (attribution paused): {}", e);
+                // Ledger keeps charging E_in; balance will show as leak.
+                // This is intentional: better to show unattributed than to crash.
+            }
         }
 
         // Update ledger metrics
