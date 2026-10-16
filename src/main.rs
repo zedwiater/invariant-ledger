@@ -3,6 +3,14 @@
 //! A lightweight daemon that maps hardware telemetry (RAPL, GPU)
 //! to a closed-loop M_0 energy ledger, attributing Joules to
 //! cgroups in real time.
+//!
+//! ROADMAP:
+//! - v0.1: 1Hz cgroup attribution (this version)
+//! - v0.2: High-frequency tracing hook for per-request AI attribution.
+//!         Request-scoped metadata headers inject energy deltas directly,
+//!         bypassing the 1Hz poll for sub-second LLM token tracking.
+//! - v0.3: eBPF per-syscall attribution (Phase 2). Move from coarse
+//!         cgroup-proportional to exact socket/syscall energy mapping.
 
 mod attribution;
 mod export;
@@ -21,14 +29,17 @@ async fn main() -> Result<()> {
     env_logger::init();
     info!("invariant-ledger v0.1.0 starting");
 
-    // Initialize telemetry (try hardware, fall back to mock)
+    // Initialize telemetry (try hardware, require explicit opt-in for mock)
+    let allow_mock = std::env::var("INVARIANT_MOCK").map(|v| v == "1").unwrap_or(false)
+        || std::env::args().any(|a| a == "--mock");
+
     let mut sources: Vec<Box<dyn TelemetrySource>> = vec![];
     match telemetry::RaplSource::new() {
         Ok(s) => {
             info!("Using Intel RAPL telemetry");
             sources.push(Box::new(s));
         }
-        Err(e) => warn!("RAPL unavailable: {}, using mock", e),
+        Err(e) => warn!("RAPL unavailable: {}", e),
     }
     match telemetry::AmdgpuSource::new() {
         Ok(s) => {
@@ -37,9 +48,20 @@ async fn main() -> Result<()> {
         }
         Err(_) => {}
     }
+    // TODO: NVML source (requires nvml-wrapper crate)
+
     if sources.is_empty() {
-        info!("No hardware telemetry, using mock (100W)");
-        sources.push(Box::new(MockSource::new(100.0)));
+        if allow_mock {
+            warn!("No hardware telemetry found, using MOCK source (--mock / INVARIANT_MOCK=1). NOT FOR PRODUCTION.");
+            sources.push(Box::new(MockSource::new(100.0)));
+        } else {
+            // Hard fail: silent mock in prod destroys trust (Gemini red-pen)
+            anyhow::bail!(
+                "No hardware telemetry available (RAPL, amdgpu, NVML all failed). \
+                 Refusing to run with silent mock. \
+                 Pass --mock or set INVARIANT_MOCK=1 for simulation mode."
+            );
+        }
     }
 
     let mut ledger = M0Ledger::new();
