@@ -4,11 +4,16 @@
 //! to a closed-loop M_0 energy ledger, attributing Joules to
 //! cgroups in real time.
 //!
+//! PHILOSOPHY: Pay for physics, not marketing.
+//! Every other utility (electricity, water, gas) bills by physical unit.
+//! AI should be no different. Tokens are an abstraction; Joules are the truth.
+//!
 //! ROADMAP:
-//! - v0.1: 1Hz cgroup attribution (this version)
-//! - v0.2: High-frequency tracing hook for per-request AI attribution.
+//! - v0.1: 1Hz cgroup attribution
+//! - v0.2: High-frequency tracing hooks for per-request AI attribution.
 //!         Request-scoped metadata headers inject energy deltas directly,
 //!         bypassing the 1Hz poll for sub-second LLM token tracking.
+//!         → src/tracing/ (IMPLEMENTED)
 //! - v0.3: eBPF per-syscall attribution (Phase 2). Move from coarse
 //!         cgroup-proportional to exact socket/syscall energy mapping.
 
@@ -17,6 +22,7 @@ mod export;
 mod governor;
 mod ledger;
 mod telemetry;
+mod tracing;
 
 use anyhow::Result;
 use ledger::M0Ledger;

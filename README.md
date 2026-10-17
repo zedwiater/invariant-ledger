@@ -2,6 +2,24 @@
 
 **Know exactly how many Joules every AI query and containerized workload costs — zero specialized hardware required.**
 
+## Philosophy: Pay for Physics, Not Marketing
+
+Every other resource you pay for — electricity, water, gas — is billed by physical unit. Kilowatt-hours. Gallons. Cubic feet. Transparent, auditable, honest.
+
+AI is the exception. You're billed by tokens, credits, seats, requests — abstraction units designed to obscure the real cost and maximize margin.
+
+**invariant-ledger replaces the abstraction with the measurement.**
+
+- Your $5/month covers 16,900 Joules. Not "10,000 tokens*" with asterisks.
+- Government subsidies cover a baseline 1,690 J for everyone — digital equity, like Lifeline for phones.
+- You see exactly what you burned and what it cost to generate. No dark patterns.
+
+When every query prints an immutable Joule receipt, bloat dies. Developers optimize because the cost is visible. Consumers trust because the pricing is honest.
+
+**Pay for physics. Not for marketing.**
+
+---
+
 A lightweight daemon that maps hardware telemetry (Intel RAPL, AMD GPU, NVIDIA) to a closed-loop M_0 energy ledger, attributing real-time Joules to cgroups and containers.
 
 ## Why
